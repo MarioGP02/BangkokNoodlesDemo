@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bangkok - Demo Funcional</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bangkok: {
+                            bg: '#0a0a0a',       // Fondo negro profundo
+                            card: '#171717',     // Gris muy oscuro para tarjetas
+                            border: '#262626',   // Bordes sutiles
+                            primary: '#ff6b00',  // Naranja corporativo
+                            text: '#f5f5f5'      // Blanco roto
+                        }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #1a1a1a; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Contenedor del Teléfono Simulado -->
+    <div class="w-full max-w-[400px] bg-bangkok-bg h-[800px] shadow-2xl rounded-[40px] overflow-hidden relative flex flex-col border-[6px] border-neutral-800">
+        
+        <!-- Cabecera Global -->
+        <header class="p-6 pb-4 border-b border-bangkok-border flex justify-between items-center z-10 bg-bangkok-bg">
+            <div>
+                <h1 class="text-3xl font-black text-bangkok-text tracking-tighter">
+                    BANGKOK<span class="text-bangkok-primary">.</span>
+                </h1>
+            </div>
+            <div id="header-icon" class="text-bangkok-primary">
+                <i data-lucide="utensils" class="w-6 h-6"></i>
+            </div>
+        </header>
+
+        <!-- CONTENEDOR DE VISTAS (Aquí cambiaremos entre Menú, Carrito y Cocina) -->
+        <main id="app-content" class="flex-1 overflow-y-auto hide-scrollbar pb-24 relative"></main>
+
+        <!-- Barra de Navegación Inferior -->
+        <nav class="absolute bottom-0 left-0 right-0 bg-bangkok-bg border-t border-bangkok-border px-6 py-4 flex justify-between items-center z-30">
+            <button onclick="changeView('menu')" class="flex flex-col items-center w-16" id="nav-menu">
+                <i data-lucide="book-open" class="w-6 h-6 text-bangkok-primary transition-colors duration-200"></i>
+                <span class="text-[10px] font-semibold mt-1.5 text-bangkok-primary">Carta</span>
+            </button>
+            <button onclick="changeView('cart')" class="flex flex-col items-center w-16 relative" id="nav-cart">
+                <i data-lucide="shopping-bag" class="w-6 h-6 text-neutral-500 transition-colors duration-200"></i>
+                <span id="cart-badge" class="absolute -top-1 right-2 bg-bangkok-primary text-black text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
+                <span class="text-[10px] font-medium mt-1.5 text-neutral-500">Carrito</span>
+            </button>
+            <button onclick="changeView('kitchen')" class="flex flex-col items-center w-16" id="nav-kitchen">
+                <i data-lucide="chef-hat" class="w-6 h-6 text-neutral-500 transition-colors duration-200"></i>
+                <span class="text-[10px] font-medium mt-1.5 text-neutral-500">Cocina</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- LÓGICA DE LA DEMO (JavaScript) -->
+    <script>
+        // --- BASE DE DATOS SIMULADA ---
+        const menuItems = [
+            { id: 1, name: 'Pad Thai Clásico', desc: 'Tallarines de arroz, pollo, brotes de soja, cacahuetes y salsa de tamarindo.', price: 11.90, img: 'https://images.unsplash.com/photo-1559314809-0d155014e29e?auto=format&fit=crop&w=300&q=80' },
+            { id: 2, name: 'Noodles Teriyaki Picantes', desc: 'Fideos de trigo salteados al wok con ternera, verduras y sriracha.', price: 12.50, img: 'https://images.unsplash.com/photo-1617093727343-374698b1b08d?auto=format&fit=crop&w=300&q=80' },
+            { id: 3, name: 'Gyozas de Pollo', desc: 'Empanadillas japonesas a la plancha (5 uds) con soja cítrica.', price: 6.50, img: 'https://images.unsplash.com/photo-1496116218417-1a781b1c416c?auto=format&fit=crop&w=300&q=80' },
+            { id: 4, name: 'Bao de Panceta', desc: 'Pan al vapor relleno de panceta glaseada, pepino y mayonesa picante.', price: 5.50, img: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=300&q=80' }
+        ];
+
+        let cart = [];
+        let kitchenTickets = [];
+
+        // --- RENDERIZADO DE VISTAS ---
+        const contentDiv = document.getElementById('app-content');
+
+        function renderMenu() {
+            let html = `<div class="p-6 space-y-5">`;
+            menuItems.forEach(item => {
+                html += `
+                <div class="bg-bangkok-card rounded-2xl overflow-hidden flex gap-4 border border-bangkok-border p-3">
+                    <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
+                        <img src="${item.img}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 flex flex-col justify-between py-1 pr-1">
+                        <div>
+                            <h3 class="font-bold text-bangkok-text text-sm">${item.name}</h3>
+                            <p class="text-[11px] text-neutral-400 mt-1 line-clamp-2">${item.desc}</p>
+                        </div>
+                        <div class="flex justify-between items-center mt-2">
+                            <span class="font-bold text-bangkok-text">${item.price.toFixed(2)} €</span>
+                            <button onclick="addToCart(${item.id})" class="bg-bangkok-primary text-black w-8 h-8 rounded-full flex items-center justify-center font-bold hover:scale-105 transition-transform">
+                                <i data-lucide="plus" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            html += `</div>`;
+            contentDiv.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function renderCart() {
+            if (cart.length === 0) {
+                contentDiv.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-neutral-500 p-6 text-center">
+                        <i data-lucide="shopping-bag" class="w-16 h-16 mb-4 opacity-50"></i>
+                        <p class="font-medium">Tu carrito está vacío</p>
+                        <p class="text-sm mt-2">Añade unos deliciosos noodles para empezar.</p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            let total = 0;
+            let html = `<div class="p-6 flex flex-col min-h-full">
+                            <h2 class="text-xl font-bold text-bangkok-text mb-6">Tu Pedido</h2>
+                            <div class="space-y-4 flex-1">`;
+            
+            cart.forEach((item, index) => {
+                total += item.price;
+                html += `
+                    <div class="flex justify-between items-center bg-bangkok-card p-4 rounded-xl border border-bangkok-border">
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-bangkok-text text-sm">${item.name}</h4>
+                            <span class="text-bangkok-primary font-bold text-sm">${item.price.toFixed(2)} €</span>
+                        </div>
+                        <button onclick="removeFromCart(${index})" class="text-neutral-500 hover:text-red-500 p-2">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>`;
+            });
+
+            html += `   </div>
+                        <div class="mt-8 pt-6 border-t border-bangkok-border">
+                            <div class="flex justify-between items-center mb-6 text-lg">
+                                <span class="text-neutral-400">Total</span>
+                                <span class="font-black text-bangkok-text">${total.toFixed(2)} €</span>
+                            </div>
+                            <button onclick="sendToKitchen()" class="w-full bg-bangkok-primary text-black font-bold py-4 rounded-xl text-lg shadow-[0_0_20px_rgba(255,107,0,0.3)] hover:scale-[1.02] transition-transform">
+                                Confirmar Pedido
+                            </button>
+                        </div>
+                    </div>`;
+            
+            contentDiv.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function renderKitchen() {
+            if (kitchenTickets.length === 0) {
+                contentDiv.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-neutral-500 p-6 text-center">
+                        <i data-lucide="chef-hat" class="w-16 h-16 mb-4 opacity-50"></i>
+                        <p class="font-medium">No hay comandas pendientes</p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            let html = `<div class="p-6 grid grid-cols-1 gap-4">
+                            <h2 class="text-xl font-bold text-bangkok-text mb-2">Visor de Cocina</h2>`;
+            
+            kitchenTickets.forEach((ticket, index) => {
+                html += `
+                    <div class="bg-[#fffbeeb3] p-4 rounded-xl border-l-4 border-bangkok-primary relative">
+                        <div class="flex justify-between items-start mb-3 pb-2 border-b border-black/10">
+                            <span class="text-black font-black font-mono text-lg">#${ticket.orderId}</span>
+                            <span class="text-black/60 font-mono text-sm">${ticket.time}</span>
+                        </div>
+                        <ul class="space-y-2 mb-4">`;
+                
+                ticket.items.forEach(item => {
+                    html += `<li class="text-black font-semibold text-sm flex items-start gap-2">
+                                <span class="text-bangkok-primary">1x</span> ${item.name}
+                             </li>`;
+                });
+
+                html += `       </ul>
+                        <button onclick="completeTicket(${index})" class="w-full bg-black text-white text-xs font-bold py-2.5 rounded-lg hover:bg-neutral-800">
+                            MARCAR PREPARADO
+                        </button>
+                    </div>`;
+            });
+
+            html += `</div>`;
+            contentDiv.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        // --- LÓGICA DE NEGOCIO ---
+        function addToCart(id) {
+            const item = menuItems.find(i => i.id === id);
+            cart.push(item);
+            updateCartBadge();
+            
+            // Feedback visual rápido
+            const btn = event.currentTarget;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i>`;
+            btn.classList.add('bg-green-500');
+            lucide.createIcons();
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('bg-green-500');
+                lucide.createIcons();
+            }, 500);
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartBadge();
+            renderCart();
+        }
+
+        function updateCartBadge() {
+            const badge = document.getElementById('cart-badge');
+            if (cart.length > 0) {
+                badge.innerText = cart.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function sendToKitchen() {
+            if (cart.length === 0) return;
+
+            const newTicket = {
+                orderId: Math.floor(Math.random() * 9000) + 1000,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                items: [...cart]
+            };
+
+            kitchenTickets.push(newTicket);
+            cart = []; // Vaciamos el carrito
+            updateCartBadge();
+            
+            alert(`¡Pedido #${newTicket.orderId} enviado a cocina con éxito!`);
+            changeView('kitchen');
+        }
+
+        function completeTicket(index) {
+            kitchenTickets.splice(index, 1);
+            renderKitchen();
+        }
+
+        // --- NAVEGACIÓN ---
+        function changeView(view) {
+            // Actualizar UI de los botones inferiores
+            const navIds = ['nav-menu', 'nav-cart', 'nav-kitchen'];
+            navIds.forEach(id => {
+                const btn = document.getElementById(id);
+                // Lucide transforma <i> en <svg>, buscamos la que exista
+                const icon = btn.querySelector('svg') || btn.querySelector('i');
+                if (icon) {
+                    icon.classList.remove('text-bangkok-primary');
+                    icon.classList.add('text-neutral-500');
+                }
+                
+                const textSpan = btn.querySelector('span:last-child');
+                if (textSpan) {
+                    textSpan.classList.remove('text-bangkok-primary', 'font-semibold');
+                    textSpan.classList.add('text-neutral-500', 'font-medium');
+                }
+            });
+
+            const activeBtn = document.getElementById(`nav-${view}`);
+            const activeIcon = activeBtn.querySelector('svg') || activeBtn.querySelector('i');
+            if (activeIcon) {
+                activeIcon.classList.remove('text-neutral-500');
+                activeIcon.classList.add('text-bangkok-primary');
+            }
+            
+            const activeTextSpan = activeBtn.querySelector('span:last-child');
+            if (activeTextSpan) {
+                activeTextSpan.classList.remove('text-neutral-500', 'font-medium');
+                activeTextSpan.classList.add('text-bangkok-primary', 'font-semibold');
+            }
+
+            // Renderizar la vista correspondiente
+            if (view === 'menu') renderMenu();
+            if (view === 'cart') renderCart();
+            if (view === 'kitchen') renderKitchen();
+        }
+
+        // Inicializar la app
+        lucide.createIcons();
+        changeView('menu');
+    </script>
+</body>
+</html>
